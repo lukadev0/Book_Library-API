@@ -11,6 +11,23 @@ services:
       interval: 5s
       timeout: 30s
       retries: 5
+  
+  postgres:
+    image: postgres:17
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: book_library
+      POSTGRES_USER: bookuser
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookuser -d book_library"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   fastapi_app:
     build: .
@@ -26,6 +43,7 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://bookuser:pass@postgres:5432/book_library
 
   celery_worker:
     build: .
@@ -35,9 +53,11 @@ services:
       - .:/app
     depends_on:
       redis:
-        condition: service_healthyv
+        condition: service_healthy
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://bookuser:pass@postgres:5432/book_library
 
-
+volumes:
+  postgres_data:

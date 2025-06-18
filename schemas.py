@@ -1,9 +1,12 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class Book(BaseModel):
-    id: int
-    title:str
+    title: str
     author: str
-    description: str | None = None
+    description: Optional[str] = None
     available: bool = True
 
+    
+    class Config:
+        from_attributes = True  # Per SQLAlchemy compatibility
